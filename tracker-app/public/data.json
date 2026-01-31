@@ -1,41 +1,68 @@
 {
-  "lastUpdated": "2026-01-31",
+  "lastUpdated": "2026-01-30",
+  "source": "silverdata.io",
   "records": [
     {
-      "date": "2026-01-31",
-      "silverPrice": "30.85",
-      "goldPrice": "2798",
-      "goldSilverRatio": "90.7",
-      "momentum": "45",
-      "comexInventory": "105",
-      "cotCommercial": "-21213",
-      "cotSpeculator": "7699",
-      "slvHoldings": "499",
-      "note": "暴跌后企稳"
-    },
-    {
       "date": "2026-01-30",
-      "silverPrice": "30.12",
-      "goldPrice": "2755",
-      "goldSilverRatio": "91.5",
-      "momentum": "30",
+      "silverPrice": "98.50",
+      "goldPrice": "5067.50",
+      "goldSilverRatio": "51.5",
+      "momentum": "100",
       "comexInventory": "105",
+      "comexEligible": "301",
+      "comexTotal": "406",
       "cotCommercial": "-21213",
       "cotSpeculator": "7699",
       "slvHoldings": "499",
-      "note": "💥 暴跌日"
+      "pslvHoldings": "218",
+      "note": "💥 暴跌 -13.62%"
     },
     {
       "date": "2026-01-29",
-      "silverPrice": "31.50",
-      "goldPrice": "2845",
-      "goldSilverRatio": "90.3",
-      "momentum": "65",
+      "silverPrice": "114.04",
+      "goldPrice": "5318.40",
+      "goldSilverRatio": "46.6",
+      "momentum": "100",
       "comexInventory": "105",
+      "comexEligible": "301",
+      "comexTotal": "406",
       "cotCommercial": "-21213",
       "cotSpeculator": "7699",
       "slvHoldings": "499",
-      "note": "FOMC会议后"
+      "pslvHoldings": "218",
+      "note": "暴跌前"
     }
-  ]
+  ],
+  "marketInsights": {
+    "goldSilverRatio": {
+      "value": 51.5,
+      "percentile": 36,
+      "signal": "bullish",
+      "description": "金银比处于历史36%分位，白银相对黄金便宜"
+    },
+    "cotPositioning": {
+      "commercial": -21213,
+      "managedMoney": 7699,
+      "signal": "neutral",
+      "description": "商业持仓中性"
+    },
+    "momentum": {
+      "score": 100,
+      "signal": "bullish",
+      "description": "多时间框架动量强势看多"
+    },
+    "technical": {
+      "rsi": 55.8,
+      "sma50": 79.14,
+      "sma200": 50.60,
+      "priceVsSma50": "above",
+      "signal": "bullish"
+    }
+  },
+  "priceRange52Week": {
+    "low": 27.81,
+    "high": 115.08,
+    "currentFromLow": "254.2%",
+    "currentFromHigh": "14.4%"
+  }
 }

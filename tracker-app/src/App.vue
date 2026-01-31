@@ -4,15 +4,16 @@ import { useTracker } from './composables/useTracker'
 const {
   records,
   lastUpdated,
+  source,
   loading,
   error,
+  marketInsights,
+  priceRange,
   getSignal,
   calculateSummary,
   getAdvice,
   exportCSV,
   loadData,
-  isWednesday,
-  isFriday,
   latestRecord,
   priceChange
 } = useTracker()
@@ -26,7 +27,7 @@ const {
         <h1 class="text-2xl font-bold">📊 金银数据追踪</h1>
         <div class="flex items-center gap-4">
           <span class="text-sm text-gray-400">
-            更新: {{ lastUpdated }}
+            更新: {{ lastUpdated }} | 来源: {{ source }}
           </span>
           <button 
             @click="loadData" 
@@ -58,200 +59,205 @@ const {
 
       <!-- 主内容 -->
       <template v-else>
-        <!-- 今日概览 -->
+        <!-- 价格概览 -->
+        <div v-if="latestRecord" class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- 白银价格 -->
+          <div class="p-4 bg-gray-800 rounded-lg text-center">
+            <div class="text-gray-400 text-sm mb-1">白银 Ag</div>
+            <div class="text-3xl font-bold">${{ latestRecord.silverPrice }}</div>
+            <div v-if="priceChange" class="text-sm mt-1" :class="priceChange.change >= 0 ? 'text-green-400' : 'text-red-400'">
+              {{ priceChange.change >= 0 ? '▲' : '▼' }} {{ Math.abs(priceChange.percent).toFixed(2) }}%
+            </div>
+          </div>
+          
+          <!-- 黄金价格 -->
+          <div class="p-4 bg-gray-800 rounded-lg text-center">
+            <div class="text-gray-400 text-sm mb-1">黄金 Au</div>
+            <div class="text-3xl font-bold">${{ latestRecord.goldPrice }}</div>
+          </div>
+          
+          <!-- 金银比 -->
+          <div class="p-4 bg-gray-800 rounded-lg text-center">
+            <div class="text-gray-400 text-sm mb-1">金银比</div>
+            <div 
+              class="text-3xl font-bold"
+              :class="{
+                'text-green-400': getSignal('goldSilverRatio', latestRecord.goldSilverRatio) === 'bullish',
+                'text-red-400': getSignal('goldSilverRatio', latestRecord.goldSilverRatio) === 'bearish'
+              }"
+            >
+              {{ latestRecord.goldSilverRatio }}
+            </div>
+            <div v-if="marketInsights" class="text-xs text-gray-500 mt-1">
+              第{{ marketInsights.goldSilverRatio.percentile }}百分位
+            </div>
+          </div>
+          
+          <!-- 动量 -->
+          <div class="p-4 bg-gray-800 rounded-lg text-center">
+            <div class="text-gray-400 text-sm mb-1">动量分数</div>
+            <div 
+              class="text-3xl font-bold"
+              :class="{
+                'text-green-400': getSignal('momentum', latestRecord.momentum) === 'bullish',
+                'text-red-400': getSignal('momentum', latestRecord.momentum) === 'bearish'
+              }"
+            >
+              {{ latestRecord.momentum }}/100
+            </div>
+          </div>
+        </div>
+
+        <!-- 52周范围 -->
+        <div v-if="priceRange && latestRecord" class="mb-6 p-4 bg-gray-800 rounded-lg">
+          <div class="text-sm text-gray-400 mb-2">52周价格范围</div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm">${{ priceRange.low }}</span>
+            <div class="flex-1 h-2 bg-gray-700 rounded-full relative">
+              <div 
+                class="absolute h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full"
+                :style="{ width: `${((parseFloat(latestRecord.silverPrice) - priceRange.low) / (priceRange.high - priceRange.low)) * 100}%` }"
+              ></div>
+            </div>
+            <span class="text-sm">${{ priceRange.high }}</span>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-1">
+            <span>距低点 +{{ priceRange.currentFromLow }}</span>
+            <span>距高点 -{{ priceRange.currentFromHigh }}</span>
+          </div>
+        </div>
+
+        <!-- 市场洞察 -->
+        <div v-if="marketInsights" class="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="p-3 bg-gray-800 rounded-lg">
+            <div class="text-xs text-gray-400">金银比信号</div>
+            <div class="font-semibold" :class="marketInsights.goldSilverRatio.signal === 'bullish' ? 'text-green-400' : 'text-gray-300'">
+              {{ marketInsights.goldSilverRatio.signal === 'bullish' ? '🟢 看多' : '⚪ 中性' }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">{{ marketInsights.goldSilverRatio.description }}</div>
+          </div>
+          
+          <div class="p-3 bg-gray-800 rounded-lg">
+            <div class="text-xs text-gray-400">COT持仓</div>
+            <div class="font-semibold" :class="marketInsights.cotPositioning.signal === 'bullish' ? 'text-green-400' : 'text-gray-300'">
+              {{ marketInsights.cotPositioning.signal === 'bullish' ? '🟢 看多' : marketInsights.cotPositioning.signal === 'bearish' ? '🔴 看空' : '⚪ 中性' }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">商业: {{ marketInsights.cotPositioning.commercial.toLocaleString() }}</div>
+          </div>
+          
+          <div class="p-3 bg-gray-800 rounded-lg">
+            <div class="text-xs text-gray-400">技术面</div>
+            <div class="font-semibold" :class="marketInsights.technical.signal === 'bullish' ? 'text-green-400' : 'text-gray-300'">
+              {{ marketInsights.technical.signal === 'bullish' ? '🟢 看多' : '⚪ 中性' }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">RSI: {{ marketInsights.technical.rsi }}</div>
+          </div>
+          
+          <div class="p-3 bg-gray-800 rounded-lg">
+            <div class="text-xs text-gray-400">动量信号</div>
+            <div class="font-semibold" :class="marketInsights.momentum.signal === 'bullish' ? 'text-green-400' : 'text-gray-300'">
+              {{ marketInsights.momentum.signal === 'bullish' ? '🟢 强势看多' : '⚪ 中性' }}
+            </div>
+            <div class="text-xs text-gray-500 mt-1">{{ marketInsights.momentum.description }}</div>
+          </div>
+        </div>
+
+        <!-- COMEX库存详情 -->
         <div v-if="latestRecord" class="mb-6 p-4 bg-gray-800 rounded-lg">
-          <h2 class="text-lg font-semibold mb-3">📈 最新数据 ({{ latestRecord.date }})</h2>
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div class="text-center">
-              <div class="text-gray-400 text-sm">白银</div>
-              <div class="text-2xl font-bold">${{ latestRecord.silverPrice }}</div>
-              <div v-if="priceChange" class="text-sm" :class="priceChange.change >= 0 ? 'text-green-400' : 'text-red-400'">
-                {{ priceChange.change >= 0 ? '+' : '' }}{{ priceChange.percent.toFixed(2) }}%
-              </div>
+          <div class="text-sm font-semibold mb-3">📦 COMEX库存 (百万盎司)</div>
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-red-400">{{ latestRecord.comexInventory }}M</div>
+              <div class="text-xs text-gray-400">Registered (可交割)</div>
             </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-sm">黄金</div>
-              <div class="text-2xl font-bold">${{ latestRecord.goldPrice }}</div>
+            <div>
+              <div class="text-2xl font-bold text-yellow-400">{{ latestRecord.comexEligible || '--' }}M</div>
+              <div class="text-xs text-gray-400">Eligible (合格)</div>
             </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-sm">金银比</div>
-              <div 
-                class="text-2xl font-bold"
-                :class="{
-                  'text-green-400': getSignal('goldSilverRatio', latestRecord.goldSilverRatio) === 'bullish',
-                  'text-red-400': getSignal('goldSilverRatio', latestRecord.goldSilverRatio) === 'bearish'
-                }"
-              >
-                {{ latestRecord.goldSilverRatio }}
-              </div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-sm">库存(M)</div>
-              <div 
-                class="text-2xl font-bold"
-                :class="{
-                  'text-green-400': getSignal('comexInventory', latestRecord.comexInventory) === 'bullish',
-                  'text-red-400': getSignal('comexInventory', latestRecord.comexInventory) === 'bearish'
-                }"
-              >
-                {{ latestRecord.comexInventory }}
-              </div>
-            </div>
-            <div class="text-center">
-              <div class="text-gray-400 text-sm">建议</div>
-              <div 
-                class="text-xl font-bold px-3 py-1 rounded inline-block text-gray-900"
-                :class="getAdvice(calculateSummary(latestRecord)).class"
-              >
-                {{ getAdvice(calculateSummary(latestRecord)).text }}
-              </div>
+            <div>
+              <div class="text-2xl font-bold text-gray-300">{{ latestRecord.comexTotal || '--' }}M</div>
+              <div class="text-xs text-gray-400">Total (总计)</div>
             </div>
           </div>
         </div>
 
-        <!-- 提醒 -->
-        <div class="mb-4 p-3 bg-gray-800 rounded-lg">
-          <div class="flex flex-wrap gap-4 text-sm">
-            <span v-if="isWednesday" class="text-yellow-400 animate-pulse">
-              📅 今天是周三，记得查库存！
-            </span>
-            <span v-if="isFriday" class="text-yellow-400 animate-pulse">
-              📅 今天是周五，记得查COT！
-            </span>
-            <span class="text-gray-400">
-              数据来源：
-              <a href="https://silverdata.io" target="_blank" class="text-blue-400 hover:underline">silverdata.io</a>
-            </span>
-          </div>
-        </div>
-
-        <!-- 阈值说明 -->
-        <div class="mb-4 p-3 bg-gray-800 rounded-lg text-sm">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <!-- ETF持仓 -->
+        <div v-if="latestRecord" class="mb-6 p-4 bg-gray-800 rounded-lg">
+          <div class="text-sm font-semibold mb-3">📈 ETF持仓 (百万盎司)</div>
+          <div class="grid grid-cols-2 gap-4 text-center">
             <div>
-              <span class="text-gray-400">金银比:</span> 
-              <span class="text-green-400">&lt;50利多</span> / 
-              <span class="text-red-400">&gt;80利空</span>
+              <div class="text-2xl font-bold text-blue-400">{{ latestRecord.slvHoldings }}M</div>
+              <div class="text-xs text-gray-400">SLV (iShares)</div>
             </div>
             <div>
-              <span class="text-gray-400">库存:</span> 
-              <span class="text-green-400">&gt;150M利多</span> / 
-              <span class="text-red-400">&lt;120M利空</span>
-            </div>
-            <div>
-              <span class="text-gray-400">动量:</span> 
-              <span class="text-green-400">&gt;70利多</span> / 
-              <span class="text-red-400">&lt;30利空</span>
-            </div>
-            <div>
-              <span class="text-gray-400">COT商业:</span> 
-              <span class="text-green-400">&lt;-50K利多</span> / 
-              <span class="text-red-400">&gt;-20K利空</span>
+              <div class="text-2xl font-bold text-purple-400">{{ latestRecord.pslvHoldings || '--' }}M</div>
+              <div class="text-xs text-gray-400">PSLV (Sprott)</div>
             </div>
           </div>
         </div>
 
-        <!-- 数据表格 -->
-        <div class="overflow-x-auto rounded-lg">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-800">
-              <tr>
-                <th class="px-3 py-3 text-left font-medium">日期</th>
-                <th class="px-3 py-3 text-right font-medium">白银</th>
-                <th class="px-3 py-3 text-right font-medium">黄金</th>
-                <th class="px-3 py-3 text-right font-medium">金银比</th>
-                <th class="px-3 py-3 text-right font-medium">动量</th>
-                <th class="px-3 py-3 text-right font-medium">库存</th>
-                <th class="px-3 py-3 text-right font-medium">COT商业</th>
-                <th class="px-3 py-3 text-center font-medium">利多</th>
-                <th class="px-3 py-3 text-center font-medium">利空</th>
-                <th class="px-3 py-3 text-center font-medium">建议</th>
-                <th class="px-3 py-3 text-left font-medium">备注</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr 
-                v-for="record in records" 
-                :key="record.id" 
-                class="border-b border-gray-700 hover:bg-gray-800 transition"
-              >
-                <td class="px-3 py-3 font-mono">{{ record.date }}</td>
-                <td class="px-3 py-3 text-right font-mono">${{ record.silverPrice }}</td>
-                <td class="px-3 py-3 text-right font-mono">${{ record.goldPrice }}</td>
-                <td 
-                  class="px-3 py-3 text-right font-mono font-semibold"
-                  :class="{
-                    'text-green-400': getSignal('goldSilverRatio', record.goldSilverRatio) === 'bullish',
-                    'text-red-400': getSignal('goldSilverRatio', record.goldSilverRatio) === 'bearish'
-                  }"
-                >
-                  {{ record.goldSilverRatio }}
-                </td>
-                <td 
-                  class="px-3 py-3 text-right font-mono font-semibold"
-                  :class="{
-                    'text-green-400': getSignal('momentum', record.momentum) === 'bullish',
-                    'text-red-400': getSignal('momentum', record.momentum) === 'bearish'
-                  }"
-                >
-                  {{ record.momentum }}
-                </td>
-                <td 
-                  class="px-3 py-3 text-right font-mono font-semibold"
-                  :class="{
-                    'text-green-400': getSignal('comexInventory', record.comexInventory) === 'bullish',
-                    'text-red-400': getSignal('comexInventory', record.comexInventory) === 'bearish'
-                  }"
-                >
-                  {{ record.comexInventory }}M
-                </td>
-                <td 
-                  class="px-3 py-3 text-right font-mono font-semibold"
-                  :class="{
-                    'text-green-400': getSignal('cotCommercial', record.cotCommercial) === 'bullish',
-                    'text-red-400': getSignal('cotCommercial', record.cotCommercial) === 'bearish'
-                  }"
-                >
-                  {{ record.cotCommercial }}
-                </td>
-                <td class="px-3 py-3 text-center">
-                  <span class="px-2 py-1 bg-green-600 rounded font-semibold">
-                    {{ calculateSummary(record).bullish }}
-                  </span>
-                </td>
-                <td class="px-3 py-3 text-center">
-                  <span class="px-2 py-1 bg-red-600 rounded font-semibold">
-                    {{ calculateSummary(record).bearish }}
-                  </span>
-                </td>
-                <td class="px-3 py-3 text-center">
-                  <span 
-                    class="px-3 py-1 rounded font-semibold text-gray-900"
-                    :class="getAdvice(calculateSummary(record)).class"
-                  >
-                    {{ getAdvice(calculateSummary(record)).text }}
-                  </span>
-                </td>
-                <td class="px-3 py-3 text-gray-400">{{ record.note }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- 综合建议 -->
+        <div v-if="latestRecord" class="mb-6 p-4 bg-gray-800 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-gray-400">综合建议</div>
+              <div class="text-lg">
+                利多信号: <span class="text-green-400 font-bold">{{ calculateSummary(latestRecord).bullish }}</span> | 
+                利空信号: <span class="text-red-400 font-bold">{{ calculateSummary(latestRecord).bearish }}</span>
+              </div>
+            </div>
+            <div 
+              class="px-6 py-3 rounded-lg text-xl font-bold text-gray-900"
+              :class="getAdvice(calculateSummary(latestRecord)).class"
+            >
+              {{ getAdvice(calculateSummary(latestRecord)).text }}
+            </div>
+          </div>
         </div>
 
-        <!-- 空状态 -->
-        <div v-if="records.length === 0" class="text-center py-16 text-gray-500">
-          <div class="text-6xl mb-4">📈</div>
-          <p class="text-lg">还没有数据</p>
+        <!-- 历史数据表格 -->
+        <div class="mb-6">
+          <div class="text-sm font-semibold mb-3">📋 历史数据</div>
+          <div class="overflow-x-auto rounded-lg">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-800">
+                <tr>
+                  <th class="px-3 py-2 text-left">日期</th>
+                  <th class="px-3 py-2 text-right">白银</th>
+                  <th class="px-3 py-2 text-right">黄金</th>
+                  <th class="px-3 py-2 text-right">金银比</th>
+                  <th class="px-3 py-2 text-right">动量</th>
+                  <th class="px-3 py-2 text-right">库存</th>
+                  <th class="px-3 py-2 text-left">备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  v-for="record in records" 
+                  :key="record.id" 
+                  class="border-b border-gray-700 hover:bg-gray-800"
+                >
+                  <td class="px-3 py-2 font-mono">{{ record.date }}</td>
+                  <td class="px-3 py-2 text-right font-mono">${{ record.silverPrice }}</td>
+                  <td class="px-3 py-2 text-right font-mono">${{ record.goldPrice }}</td>
+                  <td class="px-3 py-2 text-right font-mono">{{ record.goldSilverRatio }}</td>
+                  <td class="px-3 py-2 text-right font-mono">{{ record.momentum }}</td>
+                  <td class="px-3 py-2 text-right font-mono">{{ record.comexInventory }}M</td>
+                  <td class="px-3 py-2 text-gray-400">{{ record.note }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- 底部说明 -->
-        <div class="mt-6 p-4 bg-gray-800 rounded-lg text-sm text-gray-400">
-          <h3 class="font-semibold text-white mb-2">📱 数据更新说明</h3>
+        <div class="p-4 bg-gray-800 rounded-lg text-sm text-gray-400">
+          <h3 class="font-semibold text-white mb-2">📱 数据说明</h3>
           <ul class="list-disc list-inside space-y-1">
-            <li>数据由AI每日爬取更新</li>
-            <li>周三重点关注：COMEX库存变化</li>
-            <li>周五重点关注：COT持仓报告</li>
-            <li>数据文件位置：<code class="bg-gray-700 px-1 rounded">public/data.json</code></li>
+            <li>数据来源: <a href="https://silverdata.io" target="_blank" class="text-blue-400 hover:underline">silverdata.io</a></li>
+            <li>库存每日更新，COT每周五更新</li>
+            <li>Registered = 可交割库存（关键指标）</li>
+            <li>动量100 = 强势看多，0 = 强势看空</li>
           </ul>
         </div>
       </template>

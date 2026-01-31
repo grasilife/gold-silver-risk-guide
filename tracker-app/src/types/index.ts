@@ -7,10 +7,58 @@ export interface Record {
   goldSilverRatio: string
   momentum: string
   comexInventory: string
+  comexEligible?: string
+  comexTotal?: string
   cotCommercial: string
   cotSpeculator: string
   slvHoldings: string
+  pslvHoldings?: string
   note: string
+}
+
+// 市场洞察
+export interface MarketInsights {
+  goldSilverRatio: {
+    value: number
+    percentile: number
+    signal: string
+    description: string
+  }
+  cotPositioning: {
+    commercial: number
+    managedMoney: number
+    signal: string
+    description: string
+  }
+  momentum: {
+    score: number
+    signal: string
+    description: string
+  }
+  technical: {
+    rsi: number
+    sma50: number
+    sma200: number
+    priceVsSma50: string
+    signal: string
+  }
+}
+
+// 52周价格范围
+export interface PriceRange {
+  low: number
+  high: number
+  currentFromLow: string
+  currentFromHigh: string
+}
+
+// 完整数据结构
+export interface DataFile {
+  lastUpdated: string
+  source: string
+  records: Omit<Record, 'id'>[]
+  marketInsights: MarketInsights
+  priceRange52Week: PriceRange
 }
 
 // 信号类型

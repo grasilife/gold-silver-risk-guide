@@ -1,5 +1,5 @@
 import { ref, computed, onMounted } from 'vue'
-import type { Record, Signal, Summary, Advice, Thresholds } from '../types'
+import type { Record, Signal, Summary, Advice, Thresholds, MarketInsights, PriceRange, DataFile } from '../types'
 
 // 阈值设置
 const thresholds: Thresholds = {
@@ -12,8 +12,11 @@ const thresholds: Thresholds = {
 export function useTracker() {
   const records = ref<Record[]>([])
   const lastUpdated = ref('')
+  const source = ref('')
   const loading = ref(true)
   const error = ref('')
+  const marketInsights = ref<MarketInsights | null>(null)
+  const priceRange = ref<PriceRange | null>(null)
 
   // 从JSON文件加载数据
   const loadData = async () => {
@@ -22,12 +25,15 @@ export function useTracker() {
     try {
       const response = await fetch('/data.json')
       if (!response.ok) throw new Error('加载数据失败')
-      const data = await response.json()
-      records.value = data.records.map((r: Record, index: number) => ({
+      const data: DataFile = await response.json()
+      records.value = data.records.map((r, index: number) => ({
         ...r,
         id: index
       }))
       lastUpdated.value = data.lastUpdated
+      source.value = data.source || 'silverdata.io'
+      marketInsights.value = data.marketInsights || null
+      priceRange.value = data.priceRange52Week || null
     } catch (e) {
       error.value = e instanceof Error ? e.message : '未知错误'
     } finally {
@@ -133,9 +139,12 @@ export function useTracker() {
   return {
     records,
     lastUpdated,
+    source,
     loading,
     error,
     thresholds,
+    marketInsights,
+    priceRange,
     getSignal,
     calculateSummary,
     getAdvice,
