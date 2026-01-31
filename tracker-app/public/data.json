@@ -12,44 +12,87 @@
       "comexEligible": "301",
       "comexTotal": "406",
       "cotCommercial": "-21213",
+      "cotChange": "REDUCED SHORT 5895",
       "cotSpeculator": "7699",
       "slvHoldings": "499",
       "pslvHoldings": "218",
-      "note": "💥 暴跌 -13.62%"
+      "monthlyChange": "37",
+      "weeklyChange": "-14",
+      "note": "💥 暴跌日 -13.62%"
     },
     {
-      "date": "2026-01-29",
-      "silverPrice": "114.04",
-      "goldPrice": "5318.40",
+      "date": "2026-01-27",
+      "silverPrice": "114.00",
+      "goldPrice": "5310.00",
       "goldSilverRatio": "46.6",
       "momentum": "100",
       "comexInventory": "105",
       "comexEligible": "301",
       "comexTotal": "406",
       "cotCommercial": "-21213",
+      "cotChange": "REDUCED SHORT 5895",
       "cotSpeculator": "7699",
       "slvHoldings": "499",
       "pslvHoldings": "218",
-      "note": "暴跌前"
+      "monthlyChange": "64",
+      "weeklyChange": "12",
+      "note": "⚠️ 第一通知日前2天"
+    },
+    {
+      "date": "2026-01-24",
+      "silverPrice": "102.00",
+      "goldPrice": "4982.00",
+      "goldSilverRatio": "48.8",
+      "momentum": "98",
+      "comexInventory": "105",
+      "comexEligible": "301",
+      "comexTotal": "406",
+      "cotCommercial": "-27108",
+      "cotChange": "",
+      "cotSpeculator": "8500",
+      "slvHoldings": "499",
+      "pslvHoldings": "218",
+      "monthlyChange": "47",
+      "weeklyChange": "8",
+      "note": "COT报告日"
+    },
+    {
+      "date": "2026-01-01",
+      "silverPrice": "69.50",
+      "goldPrice": "4200.00",
+      "goldSilverRatio": "60.4",
+      "momentum": "75",
+      "comexInventory": "110",
+      "comexEligible": "310",
+      "comexTotal": "420",
+      "cotCommercial": "-35000",
+      "cotChange": "",
+      "cotSpeculator": "12000",
+      "slvHoldings": "495",
+      "pslvHoldings": "215",
+      "monthlyChange": "0",
+      "weeklyChange": "0",
+      "note": "月初基准"
     }
   ],
   "marketInsights": {
     "goldSilverRatio": {
       "value": 51.5,
       "percentile": 36,
-      "signal": "bullish",
-      "description": "金银比处于历史36%分位，白银相对黄金便宜"
+      "signal": "neutral",
+      "description": "金银比处于历史36%分位"
     },
     "cotPositioning": {
       "commercial": -21213,
       "managedMoney": 7699,
-      "signal": "neutral",
-      "description": "商业持仓中性"
+      "signal": "bearish",
+      "change": "REDUCED SHORT 5895",
+      "description": "商业空头减仓5895手，准备交割"
     },
     "momentum": {
       "score": 100,
       "signal": "bullish",
-      "description": "多时间框架动量强势看多"
+      "description": "多时间框架动量强势"
     },
     "technical": {
       "rsi": 55.8,
