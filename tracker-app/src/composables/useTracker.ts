@@ -1,7 +1,5 @@
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { Record, Signal, Summary, Advice, Thresholds } from '../types'
-
-const STORAGE_KEY = 'gold-silver-tracker'
 
 // 阈值设置
 const thresholds: Thresholds = {
@@ -13,23 +11,29 @@ const thresholds: Thresholds = {
 
 export function useTracker() {
   const records = ref<Record[]>([])
-  const showForm = ref(false)
+  const lastUpdated = ref('')
+  const loading = ref(true)
+  const error = ref('')
 
-  // 表单初始值
-  const getInitialForm = (): Omit<Record, 'id'> => ({
-    date: new Date().toISOString().split('T')[0],
-    silverPrice: '',
-    goldPrice: '',
-    goldSilverRatio: '',
-    momentum: '',
-    comexInventory: '',
-    cotCommercial: '',
-    cotSpeculator: '',
-    slvHoldings: '',
-    note: ''
-  })
-
-  const form = ref<Omit<Record, 'id'>>(getInitialForm())
+  // 从JSON文件加载数据
+  const loadData = async () => {
+    loading.value = true
+    error.value = ''
+    try {
+      const response = await fetch('/data.json')
+      if (!response.ok) throw new Error('加载数据失败')
+      const data = await response.json()
+      records.value = data.records.map((r: Record, index: number) => ({
+        ...r,
+        id: index
+      }))
+      lastUpdated.value = data.lastUpdated
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : '未知错误'
+    } finally {
+      loading.value = false
+    }
+  }
 
   // 计算信号
   const getSignal = (field: keyof Thresholds, value: string): Signal => {
@@ -83,42 +87,10 @@ export function useTracker() {
     return { text: '观望', class: 'bg-yellow-400' }
   }
 
-  // 添加记录
-  const addRecord = () => {
-    const newRecord: Record = { ...form.value, id: Date.now() }
-    records.value.unshift(newRecord)
-    saveToLocal()
-    resetForm()
-    showForm.value = false
-  }
-
-  // 删除记录
-  const deleteRecord = (id: number) => {
-    records.value = records.value.filter(r => r.id !== id)
-    saveToLocal()
-  }
-
-  // 重置表单
-  const resetForm = () => {
-    form.value = getInitialForm()
-  }
-
-  // 本地存储
-  const saveToLocal = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records.value))
-  }
-
-  const loadFromLocal = () => {
-    const data = localStorage.getItem(STORAGE_KEY)
-    if (data) {
-      records.value = JSON.parse(data)
-    }
-  }
-
   // 导出CSV
   const exportCSV = () => {
     const headers = ['日期', '白银', '黄金', '金银比', '动量', '库存', 'COT商业', 'COT投机', 'SLV', '利多', '利空', '建议', '备注']
-    const rows = records.value.map(r => {
+    const rows = records.value.map((r: Record) => {
       const summary = calculateSummary(r)
       const advice = getAdvice(summary)
       return [
@@ -132,7 +104,7 @@ export function useTracker() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const link = document.createElement('a')
     link.href = URL.createObjectURL(blob)
-    link.download = `金银追踪_${new Date().toISOString().split('T')[0]}.csv`
+    link.download = `金银追踪_${new Date().toISOString().split('T')[0] ?? ''}.csv`
     link.click()
   }
 
@@ -140,25 +112,38 @@ export function useTracker() {
   const isWednesday = computed(() => new Date().getDay() === 3)
   const isFriday = computed(() => new Date().getDay() === 5)
 
-  onMounted(() => {
-    loadFromLocal()
+  // 最新记录
+  const latestRecord = computed(() => records.value[0] || null)
+
+  // 价格变化
+  const priceChange = computed(() => {
+    if (records.value.length < 2) return null
+    const today = parseFloat(records.value[0]?.silverPrice || '0')
+    const yesterday = parseFloat(records.value[1]?.silverPrice || '0')
+    if (!today || !yesterday) return null
+    const change = today - yesterday
+    const percent = (change / yesterday) * 100
+    return { change, percent }
   })
 
-  watch(records, saveToLocal, { deep: true })
+  onMounted(() => {
+    loadData()
+  })
 
   return {
     records,
-    showForm,
-    form,
+    lastUpdated,
+    loading,
+    error,
     thresholds,
     getSignal,
     calculateSummary,
     getAdvice,
-    addRecord,
-    deleteRecord,
-    resetForm,
     exportCSV,
+    loadData,
     isWednesday,
-    isFriday
+    isFriday,
+    latestRecord,
+    priceChange
   }
 }

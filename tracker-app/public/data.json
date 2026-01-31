@@ -1,0 +1,41 @@
+{
+  "lastUpdated": "2026-01-31",
+  "records": [
+    {
+      "date": "2026-01-31",
+      "silverPrice": "30.85",
+      "goldPrice": "2798",
+      "goldSilverRatio": "90.7",
+      "momentum": "45",
+      "comexInventory": "105",
+      "cotCommercial": "-21213",
+      "cotSpeculator": "7699",
+      "slvHoldings": "499",
+      "note": "暴跌后企稳"
+    },
+    {
+      "date": "2026-01-30",
+      "silverPrice": "30.12",
+      "goldPrice": "2755",
+      "goldSilverRatio": "91.5",
+      "momentum": "30",
+      "comexInventory": "105",
+      "cotCommercial": "-21213",
+      "cotSpeculator": "7699",
+      "slvHoldings": "499",
+      "note": "💥 暴跌日"
+    },
+    {
+      "date": "2026-01-29",
+      "silverPrice": "31.50",
+      "goldPrice": "2845",
+      "goldSilverRatio": "90.3",
+      "momentum": "65",
+      "comexInventory": "105",
+      "cotCommercial": "-21213",
+      "cotSpeculator": "7699",
+      "slvHoldings": "499",
+      "note": "FOMC会议后"
+    }
+  ]
+}
